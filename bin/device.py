@@ -8,7 +8,6 @@ from zmq.eventloop.ioloop import IOLoop
 from tornado.platform.twisted import TornadoReactor
 
 from pycloudia.uitls.net import get_ip_address
-from pycloudia.devices.beans import DeviceConfig
 from pycloudia.reactor.twisted_impl import ReactorAdapter
 from pycloudia.streams.zmq_impl.factory import StreamFactory
 
@@ -23,34 +22,25 @@ class Factory(object):
         self.streams = StreamFactory.create_instance(self.io_loop)
 
     def initialize(self):
-        agent = self._create_discovery_agent(str(uuid4()))
+        agent = self._create_explorer(str(uuid4()))
         self.reactor.call_when_running(agent.start)
-        agent = self._create_discovery_agent(str(uuid4()))
+        agent = self._create_explorer(str(uuid4()))
         self.reactor.call_when_running(agent.start)
 
-    def _create_discovery_agent(self, identity):
-        config = self._create_device_config()
+    def _create_explorer(self, identity):
+        config = self._create_agent_config()
         config.identity = identity
-        from pycloudia.devices.discovery.agent import AgentFactory
-        from pycloudia.devices.discovery.protocol import DiscoveryProtocol
+        from pycloudia.explorer import ExplorerFactory, ExplorerProtocol
         from pycloudia.broadcast.udp import UdpMulticastFactory
-        factory = AgentFactory(self.streams)
+        factory = ExplorerFactory(self.streams)
         factory.reactor = self.reactor
-        factory.protocol = DiscoveryProtocol()
+        factory.protocol = ExplorerProtocol()
         factory.broadcast_factory = UdpMulticastFactory(self.options.udp_host, self.options.udp_port)
         return factory(config)
 
-    def start(self):
-        try:
-            self.io_loop.start()
-            self.logger.info('Started')
-        except KeyboardInterrupt:
-            self.reactor.subject.fireSystemEvent('shutdown')
-            self.reactor.subject.disconnectAll()
-            self.logger.info('Stopped')
-
-    def _create_device_config(self):
-        return DeviceConfig(
+    def _create_agent_config(self):
+        from pycloudia.explorer import ExplorerConfig
+        return ExplorerConfig(
             host=self._get_host_from_options(),
             min_port=self.options.min_port,
             max_port=self.options.max_port,
@@ -61,6 +51,15 @@ class Factory(object):
         if self.options.host is not None:
             return self.options.host
         return get_ip_address(self.options.interface)
+
+    def start(self):
+        try:
+            self.io_loop.start()
+            self.logger.info('Started')
+        except KeyboardInterrupt:
+            self.reactor.subject.fireSystemEvent('shutdown')
+            self.reactor.subject.disconnectAll()
+            self.logger.info('Stopped')
 
 
 def main():
