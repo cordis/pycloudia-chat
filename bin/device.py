@@ -33,7 +33,7 @@ class Factory(object):
         config.identity = identity
         from pycloudia.devices.discovery.agent import AgentFactory
         from pycloudia.devices.discovery.protocol import DiscoveryProtocol
-        from pycloudia.multicast.udp import UdpMulticastFactory
+        from pycloudia.broadcast.udp import UdpMulticastFactory
         factory = AgentFactory(self.streams)
         factory.reactor = self.reactor
         factory.protocol = DiscoveryProtocol()
