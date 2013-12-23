@@ -23,12 +23,14 @@ class Factory(object):
         self.streams = StreamFactory.create_instance(self.io_loop)
 
     def initialize(self):
-        agent = self._create_discovery_agent()
+        agent = self._create_discovery_agent(str(uuid4()))
         self.reactor.call_when_running(agent.start)
-        agent = self._create_discovery_agent()
+        agent = self._create_discovery_agent(str(uuid4()))
         self.reactor.call_when_running(agent.start)
 
-    def _create_discovery_agent(self):
+    def _create_discovery_agent(self, identity):
+        config = self._create_device_config()
+        config.identity = identity
         from pycloudia.devices.discovery.agent import AgentFactory
         from pycloudia.devices.discovery.protocol import DiscoveryProtocol
         from pycloudia.devices.discovery.udp import UdpMulticastFactory
@@ -36,7 +38,7 @@ class Factory(object):
         factory.reactor = self.reactor
         factory.protocol = DiscoveryProtocol()
         factory.broadcast_factory = UdpMulticastFactory(self.options.udp_host, self.options.udp_port)
-        return factory(str(uuid4()), self._create_device_config())
+        return factory(config)
 
     def start(self):
         try:
@@ -52,6 +54,7 @@ class Factory(object):
             host=self._get_host_from_options(),
             min_port=self.options.min_port,
             max_port=self.options.max_port,
+            identity=self.options.identity,
         )
 
     def _get_host_from_options(self):
@@ -75,6 +78,7 @@ def parse_args():
     parser.add_argument('--max-port', type=int, default=65536, help='Higher bound of ports range')
     parser.add_argument('--udp-host', type=str, default='228.0.0.1', help='UDP group host')
     parser.add_argument('--udp-port', type=int, default=5000, help='UDP group port')
+    parser.add_argument('--identity', type=str, default=str(uuid4()), help='Device identity')
     return parser.parse_args()
 
 
