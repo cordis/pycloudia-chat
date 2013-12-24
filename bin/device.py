@@ -22,17 +22,20 @@ class Factory(object):
         self.streams = StreamFactory.create_instance(self.io_loop)
 
     def initialize(self):
-        agent = self._create_explorer(str(uuid4()))
-        self.reactor.call_when_running(agent.start)
-        agent = self._create_explorer(str(uuid4()))
-        self.reactor.call_when_running(agent.start)
+        cloud = self._create_cloud()
+        explorer = self._create_explorer()
+        explorer.incoming_stream_created.connect()
+        self.reactor.call_when_running(explorer.start)
 
-    def _create_explorer(self, identity):
+    def _create_cloud(self):
+        return None
+
+    def _create_explorer(self):
         config = self._create_agent_config()
-        config.identity = identity
         from pycloudia.explorer import ExplorerFactory, ExplorerProtocol
         from pycloudia.broadcast.udp import UdpMulticastFactory
         factory = ExplorerFactory(self.streams)
+        factory.logger = logging.getLogger('pycloudia.explorer')
         factory.reactor = self.reactor
         factory.protocol = ExplorerProtocol()
         factory.broadcast_factory = UdpMulticastFactory(self.options.udp_host, self.options.udp_port)
@@ -65,6 +68,8 @@ class Factory(object):
 def main():
     args = parse_args()
     factory = Factory(args)
+    factory.initialize()
+    args.identity = str(uuid4())
     factory.initialize()
     factory.start()
 
