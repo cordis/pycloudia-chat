@@ -5,13 +5,6 @@ class IService(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_private_threads(self, actor, frame):
-        """
-        :type actor: C{im.services.im.interfaces.IActor}
-        :type frame: C{im.services.im.interfaces.IFrame}
-        """
-
-    @abstractmethod
     def get_thread_messages(self, actor, thread, frame):
         """
         :type actor: C{im.services.im.interfaces.IActor}
@@ -46,6 +39,35 @@ class IService(object):
 
     def grant_thread_access(self):
         raise NotImplementedError()
+
+    @abstractmethod
+    def get_contacts(self, actor, frame):
+        """
+        :type actor: C{im.services.im.interfaces.IActor}
+        :type frame: C{im.services.im.interfaces.IFrame}
+        """
+
+    @abstractmethod
+    def reset_contact(self, actor, thread):
+        """
+        :type actor: C{im.services.im.interfaces.IActor}
+        :type thread: C{im.services.im.interfaces.IThreadIdentity}
+        """
+
+    @abstractmethod
+    def add_contact(self, actor, thread):
+        """
+        :type actor: C{im.services.im.interfaces.IActor}
+        :type thread: C{im.services.im.interfaces.IThreadIdentity}
+        """
+
+    @abstractmethod
+    def inc_contact(self, actor, thread, count=1):
+        """
+        :type actor: C{im.services.im.interfaces.IActor}
+        :type thread: C{im.services.im.interfaces.IThreadIdentity}
+        :type count: C{int}
+        """
 
 
 class IActor(object):
