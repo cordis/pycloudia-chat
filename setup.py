@@ -9,7 +9,6 @@ setup(
         'twisted >= 13.2.0',
         'pyzmq >= 14.0.1',
         'tornado >= 3.1.1',
-        'zope.interface >= 4.0.5',
         #'springpython >= 1.3.0.RC1',
     ],
     author='CordiS',
