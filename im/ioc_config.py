@@ -9,7 +9,7 @@ from pycloudia.ioc_config import Config
 class ChatConfig(Config):
     @Object(scope.PROTOTYPE)
     def bootstrap(self):
-        from chat.bootstrap import ChatBootstrap
+        from im.bootstrap import ChatBootstrap
         instance = ChatBootstrap()
         instance.logger = logging.getLogger('bootstrap')
         instance.device_one = self.device()
