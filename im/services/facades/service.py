@@ -1,5 +1,6 @@
 from pycloudia.uitls.structs import BiDirectedDict
 from pycloudia.uitls.defer import deferrable
+
 from im.services.facades.exceptions import ClientNotFoundError
 from im.services.facades.interfaces import IService, IDirector
 
@@ -8,25 +9,24 @@ class Service(IService, IDirector):
     """
     :type gateways: L{im.services.gateways.interfaces.IService}
     :type logger: L{im.services.facades.logger.Logger}
-    :type listener: L{im.services.facades.interfaces.IListener}
     :type encoder: L{pycloudia.packages.interfaces.IEncoder}
     :type decoder: L{pycloudia.packages.interfaces.IDecoder}
-    :type client_id_factory: C{Callable}
+    :type listener: L{im.services.facades.interfaces.IListener}
+    :type client_id_factory: C{im.services.facades.interfaces.IClientIdFactory}
     """
     gateways = None
 
     logger = None
-    listener = None
     encoder = None
     decoder = None
+    listener = None
     client_id_factory = None
 
-    def __init__(self, facade_id):
+    def __init__(self, address):
         """
-        :type facade_id: C{str}
-
+        :type address: C{str}
         """
-        self.facade_id = facade_id
+        self.address = address
         self.clients_map = BiDirectedDict()
 
     @deferrable
@@ -35,7 +35,7 @@ class Service(IService, IDirector):
 
     def connection_made(self, client):
         self.clients_map[client] = client_id = self.client_id_factory()
-        self.gateways.create_gateway(client_id, self.facade_id)
+        self.gateways.create_gateway(client_id, self.address)
 
     def connection_done(self, client):
         self.connection_lost(client, None)
@@ -57,14 +57,14 @@ class Service(IService, IDirector):
             package = self.decoder.decode(message)
             self.gateways.process_incoming_package(client_id, package)
 
-    def process_outgoing_package(self, facade_id, client_id, package):
-        assert facade_id == self.facade_id
+    def process_outgoing_package(self, address, client_id, package):
+        assert address == self.address
         client = self._get_client_by_client_id(client_id)
         message = self.encoder.encode(package)
         client.send_message(message)
 
-    def validate(self, facade_id, client_id):
-        assert facade_id == self.facade_id
+    def validate(self, address, client_id):
+        assert address == self.address
         self._get_client_by_client_id(client_id)
 
     def _get_client_by_client_id(self, client_id):

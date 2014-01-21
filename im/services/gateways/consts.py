@@ -17,18 +17,16 @@ class HEADER(object):
     INTERNAL_PREFIX = 'N-'
 
     class INTERNAL(object):
+        SOURCE = 'N-Source'
+        USER_ID = 'N-User-Id'
+        COMMAND = 'N-Command'
+        CLIENT_ID = 'N-Client-Id'
         REQUEST_ID = 'N-Request-Id'
-        SOURCE = 'N-Clients-Source'
-        USER_ID = 'N-Clients-User-Id'
-        SERVICE = 'N-Router-Service'
-        COMMAND = 'N-Router-Command'
-        CLIENT_ID = 'N-Clients-Client-Id'
-        AUTH_PLATFORM = 'N-Clients-Auth-Platform'
-        AUTH_ACCESS_TOKEN = 'N-Clients-Auth-Access-Token'
 
     class EXTERNAL(object):
-        RUNTIME = 'X-Runtime'
         SERVICE = 'X-Service'
+        COMMAND = 'X-Command'
+        RUNTIME = 'X-Runtime'
         TIMEOUT = 'X-Timeout'
         REQUEST_ID = 'X-Request-Id'
         RESPONSE_ID = 'X-Response-Id'

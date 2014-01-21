@@ -24,8 +24,8 @@ class ClientProxy(IService, IServiceAdapter):
         """
         self.sender = sender
 
-    def create_gateway(self, client_id, facade_id):
-        request = RequestCreateSchema().encode(DataBean(client_id=client_id, facade_id=facade_id))
+    def create_gateway(self, client_id, facade_address):
+        request = RequestCreateSchema().encode(DataBean(client_id=client_id, facade_id=facade_address))
         package = self.sender.package_factory(request, {
             HEADER.COMMAND: COMMAND.CREATE,
         })

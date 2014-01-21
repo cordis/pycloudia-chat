@@ -10,10 +10,10 @@ class ClientProxy(IService):
         """
         self.sender = sender
 
-    def process_outgoing_package(self, facade_id, client_id, package):
-        package.headers[HEADER.FACADE_ID] = facade_id
+    def process_outgoing_package(self, address, client_id, package):
+        package.headers[HEADER.FACADE_ID] = address
         package.headers[HEADER.CLIENT_ID] = client_id
-        self.sender.send_package(facade_id, SERVICE.NAME, package)
+        self.sender.send_package(address, SERVICE.NAME, package)
 
 
 class ServerProxy(IServiceInvoker):

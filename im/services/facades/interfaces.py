@@ -1,21 +1,22 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import Callable
 
 
 class IService(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def process_outgoing_package(self, facade_id, client_id, package):
+    def process_outgoing_package(self, address, client_id, package):
         """
-        :type facade_id: C{str}
+        :type address: C{str}
         :type client_id: C{str}
         :type package: L{pycloudia.packages.interfaces.IPackage}
         """
 
     @abstractmethod
-    def validate(self, facade_id, client_id):
+    def validate(self, address, client_id):
         """
-        :type facade_id: C{str}
+        :type address: C{str}
         :type client_id: C{str}
         :rtype: L{Deferred}
         :raise: L{im.services.facades.exceptions.ClientNotFoundError}
@@ -29,7 +30,17 @@ class IListener(object):
     def start(self, director):
         """
         :type director: L{im.services.facades.interfaces.IDirector}
-        :raises L{im.services.facades.exceptions.ListenFailedError}:
+        :raises L{im.services.facades.exceptions.ListenFailedError}
+        """
+
+
+class IClientIdFactory(Callable):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self):
+        """
+        :rtype: C{str}
         """
 
 

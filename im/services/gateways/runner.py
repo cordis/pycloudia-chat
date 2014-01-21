@@ -1,60 +1,100 @@
 from pycloudia.uitls.defer import inline_callbacks, return_value, deferrable
 from pycloudia.cluster.beans import Activity
-from im.services.gateways.interfaces import IRunner
+
+from im.services.gateways.consts import HEADER, DEFAULT, SERVICE
+from im.services.gateways.interfaces import IRunner, IRunnerFactory
 from im.services.gateways.exceptions import HeaderNotFoundError
-from im.services.gateways.consts import HEADER, DEFAULT
 
 
 class Runner(IRunner):
     """
     :type dao: L{im.services.gateways.interfaces.IDao}
     :type sender: L{pycloudia.cluster.interfaces.ISender}
-    :type internal_request_id_factory: C{Callable}
+    :type facades: L{im.services.facades.interfaces.IService}
     """
     dao = None
     sender = None
-    internal_request_id_factory = None
+    facades = None
 
-    def __init__(self, client_id, facade_id, user_id=None):
+    def __init__(self, client_id):
         self.client_id = client_id
-        self.facade_id = facade_id
-        self.user_id = user_id
+        self.facade_address = None
+        self.user_id = None
+        self.activity = Activity(service=SERVICE.NAME, runtime=self.client_id)
 
-    @deferrable
-    def route_package(self, package):
-        target = self._get_external_target(package)
-        try:
-            request_id = package.headers.pop(HEADER.EXTERNAL.REQUEST_ID)
-        except KeyError:
-            return self._send_package(target, package)
-        else:
-            return self._send_request_package(target, request_id, package)
+    def get_activity(self):
+        return self.activity
+
+    @inline_callbacks
+    def set_facade_address(self, facade_address):
+        self.facade_address = yield self.dao.set_gateway_facade_address(self.client_id, facade_address)
+
+    @inline_callbacks
+    def set_user_id(self, user_id):
+        self.user_id = yield self.dao.set_gateway_user_id(self.client_id, user_id)
+
+    @inline_callbacks
+    def process_incoming_package(self, package):
+        target = self._pop_external_target(package)
+        package = self._drop_internal_headers(package)
+        package = self._copy_external_command(package)
+        package.headers[HEADER.INTERNAL.USER_ID] = self.user_id
+        package.headers[HEADER.INTERNAL.CLIENT_ID] = self.client_id
+        response_package = yield self._route_package(target, package)
+        if response_package is not None:
+            self.process_outgoing_package(response_package)
 
     @staticmethod
-    def _get_external_target(package):
+    def _pop_external_target(package):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: C{pycloudia.cluster.beans.Activity}
         """
         try:
             service = package.headers.pop(HEADER.EXTERNAL.SERVICE)
-            runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(package))
         except KeyError:
             raise HeaderNotFoundError(HEADER.EXTERNAL.SERVICE)
         else:
+            runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(package))
             return Activity(service=service, runtime=runtime)
 
-    @inline_callbacks
-    def _send_request_package(self, target, request_id, request_package):
+    @staticmethod
+    def _copy_external_command(package):
+        """
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        :rtype: L{pycloudia.packages.interfaces.IPackage}
+        """
+        try:
+            package.headers[HEADER.INTERNAL.COMMAND] = package.headers.pop(HEADER.EXTERNAL.COMMAND)
+        except KeyError:
+            raise HeaderNotFoundError(HEADER.EXTERNAL.COMMAND)
+        else:
+            return package
+
+    @deferrable
+    def _route_package(self, target, package):
         """
         :type target: L{pycloudia.cluster.beans.Activity}
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        :rtype: L{Deferred} of L{pycloudia.packages.interfaces.IPackage} or C{None}
+        """
+        try:
+            request_id = package.headers.pop(HEADER.EXTERNAL.REQUEST_ID)
+        except KeyError:
+            return self._send_package(target, package)
+        else:
+            return self._send_request_package(request_id, target, package)
+
+    @inline_callbacks
+    def _send_request_package(self, request_id, target, request_package):
+        """
         :type request_id: C{str}
+        :type target: L{pycloudia.cluster.beans.Activity}
         :type request_package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{Deferred} of L{pycloudia.packages.interfaces.IPackage}
         """
         timeout = self._get_external_timeout(request_package)
-        response_package = yield self.sender.send_request_package(self, target, request_package, timeout)
-        response_package = self._pop_internal_headers(response_package)
+        response_package = yield self.sender.send_request_package(self.activity, target, request_package, timeout)
         response_package.headers[HEADER.EXTERNAL.RESPONSE_ID] = request_id
         return_value(response_package)
 
@@ -69,8 +109,20 @@ class Runner(IRunner):
         except KeyError:
             return DEFAULT.EXTERNAL.TIMEOUT
 
+    def _send_package(self, target, package):
+        """
+        :type target: L{pycloudia.cluster.beans.Activity}
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        """
+        self.sender.send_package(target, package)
+
+    @deferrable
+    def process_outgoing_package(self, package):
+        package = self._drop_internal_headers(package)
+        self.facades.process_outgoing_package(self.facade_address, self.client_id, package)
+
     @staticmethod
-    def _pop_internal_headers(package):
+    def _drop_internal_headers(package):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{pycloudia.packages.interfaces.IPackage}
@@ -80,9 +132,20 @@ class Runner(IRunner):
                 del package.headers[header_name]
         return package
 
-    def _send_package(self, target, package):
-        """
-        :type target: L{pycloudia.cluster.beans.Activity}
-        :type package: L{pycloudia.packages.interfaces.IPackage}
-        """
-        self.sender.send_package(target, package)
+
+class RunnerFactory(IRunnerFactory):
+    """
+    :type dao: L{im.services.gateways.interfaces.IDao}
+    :type sender: L{pycloudia.cluster.interfaces.ISender}
+    :type facades: L{im.services.facades.interfaces.IService}
+    """
+    dao = None
+    sender = None
+    facades = None
+
+    def __call__(self, client_id):
+        instance = Runner(client_id)
+        instance.dao = self.dao
+        instance.sender = self.sender
+        instance.facades = self.facades
+        return instance
