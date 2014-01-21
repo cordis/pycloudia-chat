@@ -1,0 +1,2 @@
+class Factory(object):
+    pass

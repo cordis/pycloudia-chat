@@ -1,4 +1,4 @@
-from pycloudia.uitls.beans import DataBean
+from pycloudia.uitls.structs import DataBean
 
 
 class PublicThread(DataBean):
