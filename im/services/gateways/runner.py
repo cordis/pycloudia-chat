@@ -33,6 +33,11 @@ class Runner(IRunner):
     def set_user_id(self, user_id):
         self.user_id = yield self.dao.set_gateway_user_id(self.client_id, user_id)
 
+    @deferrable
+    def process_outgoing_package(self, package):
+        package = self._drop_internal_headers(package)
+        self.facades.process_outgoing_package(self.facade_address, self.client_id, package)
+
     @inline_callbacks
     def process_incoming_package(self, package):
         target = self._pop_external_target(package)
@@ -57,6 +62,17 @@ class Runner(IRunner):
         else:
             runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(package))
             return Activity(service=service, runtime=runtime)
+
+    @staticmethod
+    def _drop_internal_headers(package):
+        """
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        :rtype: L{pycloudia.packages.interfaces.IPackage}
+        """
+        for header_name in package.headers.keys():
+            if header_name.startswith(HEADER.INTERNAL_PREFIX):
+                del package.headers[header_name]
+        return package
 
     @staticmethod
     def _copy_external_command(package):
@@ -115,22 +131,6 @@ class Runner(IRunner):
         :type package: L{pycloudia.packages.interfaces.IPackage}
         """
         self.sender.send_package(target, package)
-
-    @deferrable
-    def process_outgoing_package(self, package):
-        package = self._drop_internal_headers(package)
-        self.facades.process_outgoing_package(self.facade_address, self.client_id, package)
-
-    @staticmethod
-    def _drop_internal_headers(package):
-        """
-        :type package: L{pycloudia.packages.interfaces.IPackage}
-        :rtype: L{pycloudia.packages.interfaces.IPackage}
-        """
-        for header_name in package.headers.keys():
-            if header_name.startswith(HEADER.INTERNAL_PREFIX):
-                del package.headers[header_name]
-        return package
 
 
 class RunnerFactory(IRunnerFactory):
