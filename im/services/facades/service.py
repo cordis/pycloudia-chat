@@ -1,6 +1,8 @@
 from pycloudia.uitls.structs import BiDirectedDict
 from pycloudia.uitls.defer import deferrable
+from pycloudia.cluster.beans import Activity
 
+from im.services.facades.consts import SERVICE
 from im.services.facades.exceptions import ClientNotFoundError
 from im.services.facades.interfaces import IService, IDirector
 
@@ -28,6 +30,9 @@ class Service(IService, IDirector):
         """
         self.address = address
         self.clients_map = BiDirectedDict()
+
+    def get_activity(self):
+        return Activity(service=SERVICE.NAME, address=self.address)
 
     @deferrable
     def start(self):

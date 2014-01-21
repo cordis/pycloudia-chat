@@ -1,6 +1,37 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
+class IAdapterRegistry(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def get(self, platform):
+        """
+        :type platform: C{str}
+        :rtype: L{im.services.auth.platforms.interfaces.IAdapter}
+        :raise: C{KeyError}
+        """
+
+
+class IAdapter(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def authenticate(self, access_token):
+        """
+        :type access_token: C{str}
+        :rtype: L{Deferred} of L{im.services.auth.platforms.interfaces.IProfile}
+        """
+
+    @abstractmethod
+    def get_friends(self, access_token, profile):
+        """
+        :type access_token: C{str}
+        :type profile: L{im.services.auth.platforms.interfaces.IProfile}
+        :rtype: L{Deferred} of C{list} of L{im.services.auth.platforms.interfaces.IProfile}
+        """
+
+
 class IProfile(object):
     __metaclass__ = ABCMeta
 
@@ -38,34 +69,4 @@ class IProfile(object):
     def language(self):
         """
         :rtype: C{str}
-        """
-
-
-class IAdapter(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def authenticate(self, access_token):
-        """
-        :type access_token: C{str}
-        :rtype: L{im.services.auth.platforms.interfaces.IProfile}
-        """
-
-    @abstractmethod
-    def get_friends(self, access_token, profile):
-        """
-        :type access_token: C{str}
-        :type profile: L{im.services.auth.platforms.interfaces.IProfile}
-        :rtype: C{list} of L{im.services.auth.platforms.interfaces.IProfile}
-        """
-
-
-class IAdapterRegistry(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def get_adapter(self, platform):
-        """
-        :type platform: C{str}
-        :rtype: L{im.services.auth.platforms.interfaces.IAdapter}
         """

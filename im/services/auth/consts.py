@@ -13,3 +13,9 @@ class COMMAND(object):
 
 class VERBOSE(object):
     AUTHENTICATION_FAILED = 'authentication_failed'
+
+
+class PLATFORM(object):
+    BOTS = 'bots'
+    TWITTER = 'twitter'
+    FACEBOOK = 'facebook'

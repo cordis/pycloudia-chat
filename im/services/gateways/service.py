@@ -1,7 +1,6 @@
 from pycloudia.uitls.defer import inline_callbacks, deferrable
 from pycloudia.reactor.decorators import call_isolated
 
-from im.services.gateways.consts import HEADER
 from im.services.gateways.interfaces import IService
 from im.services.gateways.exceptions import GatewayNotFoundError
 

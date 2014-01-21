@@ -11,12 +11,6 @@ class ClientProxy(IService):
     """
     sender = None
 
-    def __init__(self, source):
-        """
-        :type source: L{pycloudia.cluster.beans.Activity}
-        """
-        self.source = source
-
     def process_outgoing_package(self, address, client_id, package):
         target = self._create_target_activity(address)
         package.headers[HEADER.ADDRESS] = address
