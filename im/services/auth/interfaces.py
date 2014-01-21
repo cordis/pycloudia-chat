@@ -33,4 +33,5 @@ class IDao(object):
         :type user_id: C{str}
         :type platform: C{str}
         :type profile_list: C{list} of L{im.services.auth.platforms.interfaces.IProfile}
+        :rtype: L{Deferred} of C{None}
         """
