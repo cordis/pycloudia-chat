@@ -23,8 +23,8 @@ class IDao(object):
         """
         :type platform: C{str}
         :type profile: L{im.services.auth.platforms.interfaces.IProfile}
-        :return: Tuple of (user_id, created)
-        :rtype: (C{str}, C{boolean})
+        :return: Deferred with Tuple of (user_id, created)
+        :rtype: L{Deferred} of (C{str}, C{boolean})
         """
 
     @abstractmethod

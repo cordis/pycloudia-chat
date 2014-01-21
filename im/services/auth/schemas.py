@@ -2,7 +2,6 @@ from pyschema import Schema, Str, Unicode
 
 
 class AuthenticateRequestSchema(Schema):
-    client_id = Str()
     platform = Str()
     access_token = Str()
 

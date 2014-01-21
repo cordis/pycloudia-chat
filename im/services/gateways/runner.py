@@ -63,6 +63,7 @@ class Runner(IRunner):
             raise HeaderNotFoundError(HEADER.EXTERNAL.SERVICE)
         else:
             runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(package))
+            #@TODO: consider runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(self.client_id))
             return Activity(service=service, runtime=runtime)
 
     @staticmethod
