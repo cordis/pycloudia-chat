@@ -1,19 +1,31 @@
+from pycloudia.cluster.beans import Activity
+from pycloudia.cluster.interfaces import IServiceInvoker
+
 from im.services.facades.interfaces import IService
 from im.services.facades.consts import SERVICE, HEADER
-from pycloudia.cluster.interfaces import IServiceInvoker
 
 
 class ClientProxy(IService):
-    def __init__(self, sender):
+    """
+    :type sender: L{pycloudia.cluster.interfaces.ISender}
+    """
+    sender = None
+
+    def __init__(self, source):
         """
-        :type sender: L{pycloudia.cluster.interfaces.ISender}
+        :type source: L{pycloudia.cluster.beans.Activity}
         """
-        self.sender = sender
+        self.source = source
 
     def process_outgoing_package(self, address, client_id, package):
-        package.headers[HEADER.FACADE_ID] = address
+        target = self._create_target_activity(address)
+        package.headers[HEADER.ADDRESS] = address
         package.headers[HEADER.CLIENT_ID] = client_id
-        self.sender.send_package(address, SERVICE.NAME, package)
+        self.sender.send_package(target, package)
+
+    @staticmethod
+    def _create_target_activity(address):
+        return Activity(service=SERVICE.NAME, address=address)
 
 
 class ServerProxy(IServiceInvoker):
@@ -24,6 +36,6 @@ class ServerProxy(IServiceInvoker):
         self.service = service
 
     def process_package(self, package):
-        facade_id = package.headers.pop(HEADER.FACADE_ID)
+        address = package.headers.pop(HEADER.ADDRESS)
         client_id = package.headers.pop(HEADER.CLIENT_ID)
-        self.service.process_outgoing_package(facade_id, client_id, package)
+        self.service.process_outgoing_package(address, client_id, package)

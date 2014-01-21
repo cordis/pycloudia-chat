@@ -1,5 +1,4 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
-from collections import Callable
+from abc import ABCMeta, abstractmethod
 
 
 class IService(object):
@@ -11,15 +10,6 @@ class IService(object):
         :type address: C{str}
         :type client_id: C{str}
         :type package: L{pycloudia.packages.interfaces.IPackage}
-        """
-
-    @abstractmethod
-    def validate(self, address, client_id):
-        """
-        :type address: C{str}
-        :type client_id: C{str}
-        :rtype: L{Deferred}
-        :raise: L{im.services.facades.exceptions.ClientNotFoundError}
         """
 
 
@@ -34,7 +24,7 @@ class IListener(object):
         """
 
 
-class IClientIdFactory(Callable):
+class IClientIdFactory(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod

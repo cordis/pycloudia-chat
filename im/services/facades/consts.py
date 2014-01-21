@@ -3,6 +3,5 @@ class SERVICE(object):
 
 
 class HEADER(object):
-    SERVICE = 'X-Facades-Service'
-    CLIENT_ID = 'X-Facades-Client-Id'
-    FACADE_ID = 'X-Facades-Id'
+    CLIENT_ID = 'N-Client-Id'
+    ADDRESS = 'N-Facade-Address'
