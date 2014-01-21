@@ -1,6 +1,7 @@
 from pycloudia.uitls.defer import inline_callbacks, return_value, deferrable
 from pycloudia.cluster.beans import Activity
 
+from im.services.facades.exceptions import ClientNotFoundError
 from im.services.gateways.consts import HEADER, DEFAULT, SERVICE
 from im.services.gateways.interfaces import IRunner, IRunnerFactory
 from im.services.gateways.exceptions import HeaderNotFoundError
@@ -54,6 +55,7 @@ class Runner(IRunner):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: C{pycloudia.cluster.beans.Activity}
+        :raise: L{im.services.gateways.exceptions.HeaderNotFoundError}
         """
         try:
             service = package.headers.pop(HEADER.EXTERNAL.SERVICE)
@@ -79,6 +81,7 @@ class Runner(IRunner):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{pycloudia.packages.interfaces.IPackage}
+        :raise: L{im.services.gateways.exceptions.HeaderNotFoundError}
         """
         try:
             package.headers[HEADER.INTERNAL.COMMAND] = package.headers.pop(HEADER.EXTERNAL.COMMAND)

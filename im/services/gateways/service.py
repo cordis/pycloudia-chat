@@ -55,6 +55,11 @@ class Service(IService):
         return self._get_runner(client_id).process_outgoing_package(package)
 
     def _get_runner(self, client_id):
+        """
+        :type client_id: C{str}
+        :rtype: L{im.services.gateways.interfaces.IRunner}
+        :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
+        """
         try:
             return self.runner_map[client_id]
         except KeyError:

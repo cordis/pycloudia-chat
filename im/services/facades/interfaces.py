@@ -10,6 +10,7 @@ class IService(object):
         :type address: C{str}
         :type client_id: C{str}
         :type package: L{pycloudia.packages.interfaces.IPackage}
+        :raise: L{im.services.facades.exceptions.ClientNotFoundError}
         """
 
 
@@ -20,7 +21,7 @@ class IListener(object):
     def start(self, director):
         """
         :type director: L{im.services.facades.interfaces.IDirector}
-        :raises L{im.services.facades.exceptions.ListenFailedError}
+        :raise L{im.services.facades.exceptions.ListenFailedError}
         """
 
 

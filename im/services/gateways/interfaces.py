@@ -18,6 +18,7 @@ class IService(object):
         :type client_id: C{str}
         :type reason: C{str}
         :rtype: L{Deferred} of C{None}
+        :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
 
     @abstractmethod
@@ -26,6 +27,7 @@ class IService(object):
         :type client_id: C{str}
         :type user_id: C{str}
         :rtype: L{Deferred} of C{None}
+        :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
 
     @abstractmethod
@@ -34,6 +36,7 @@ class IService(object):
         :type client_id: C{str}
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{Deferred} of C{None}
+        :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
 
     @abstractmethod
@@ -42,6 +45,7 @@ class IService(object):
         :type client_id: C{str}
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{Deferred} of C{None}
+        :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
 
 
@@ -73,6 +77,7 @@ class IRunner(object):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
         :rtype: L{Deferred} of C{None}
+        :raise: L{im.services.gateways.exceptions.HeaderNotFoundError}
         """
 
     @abstractmethod

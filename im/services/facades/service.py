@@ -63,11 +63,12 @@ class Service(IService, IDirector):
         message = self.encoder.encode(package)
         client.send_message(message)
 
-    def validate(self, address, client_id):
-        assert address == self.address
-        self._get_client_by_client_id(client_id)
-
     def _get_client_by_client_id(self, client_id):
+        """
+        :type client_id: C{str}
+        :rtype: L{im.services.facades.interfaces.IClient}
+        :raise: L{im.services.facades.exceptions.ClientNotFoundError}
+        """
         try:
             return self.clients_map.behind[client_id]
         except KeyError:
