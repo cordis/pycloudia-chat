@@ -53,20 +53,14 @@ class IRunner(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_activity(self):
-        """
-        :rtype: L{pycloudia.cluster.beans.Activity}
-        """
-
-    @abstractmethod
-    def set_facade_address(self, facade_address):
+    def set_client_address(self, facade_address):
         """
         :type facade_address: C{str}
         :rtype: L{Deferred} of C{None}
         """
-        
+
     @abstractmethod
-    def set_user_id(self, user_id):
+    def set_client_user_id(self, user_id):
         """
         :type user_id: C{str}
         :rtype: L{Deferred} of C{None}
@@ -99,11 +93,23 @@ class IRunnerFactory(object):
         """
 
 
+class IRouter(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def route_package(self, package):
+        """
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        :rtype: L{Deferred} of L{pycloudia.packages.interfaces.IPackage or None}
+        :raise: L{im.services.gateways.exceptions.HeaderNotFoundError}
+        """
+
+
 class IDao(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def set_gateway_facade_address(self, client_id, facade_address):
+    def set_gateway_client_address(self, client_id, facade_address):
         """
         :type client_id: C{str}
         :type facade_address: C{str}
@@ -112,7 +118,7 @@ class IDao(object):
         """
         
     @abstractmethod
-    def set_gateway_user_id(self, client_id, user_id):
+    def set_gateway_client_user_id(self, client_id, user_id):
         """
         :type client_id: C{str}
         :type user_id: C{str}

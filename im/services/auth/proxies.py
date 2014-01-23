@@ -50,7 +50,7 @@ class ServiceAdapter(IService):
 
 class ServiceInvoker(IInvoker):
     """
-    :type service_factory: C{Callable}
+    :type service_factory: C{im.services.auth.interfaces.IServiceFactory}
     :type users_factory: L{im.services.auth.interfaces.IUsersFactory}
     :type sessions_factory: L{im.services.auth.interfaces.ISessionsFactory}
     """

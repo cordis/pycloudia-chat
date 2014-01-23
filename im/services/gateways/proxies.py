@@ -81,12 +81,27 @@ class ClientProxy(IService, IServiceAdapter):
         return Activity(service=SERVICE.NAME, runtime=client_id)
 
 
-class ServerProxy(IInvoker):
-    def __init__(self, service):
+class ServiceInvoker(IInvoker):
+    """
+    :type service_factory: C{Callable}
+    """
+    service_factory = None
+
+    def __init__(self, channel):
         """
-        :type service: L{im.services.gateways.interfaces.IService}
+        :type channel: L{pycloudia.services.beans.Channel}
         """
-        self.service = service
+        self.channel = channel
+        self.service = None
+
+    @deferrable
+    def initialize(self):
+        self.service = self.service_factory()
+        self.service.runner_factory = self.create_runner_factory(self.channel)
+
+    @deferrable
+    def run(self):
+        pass
 
     @deferrable
     def process_package(self, package):
@@ -101,7 +116,7 @@ class ServerProxy(IInvoker):
     @inline_callbacks
     def _process_create_command(self, package):
         request = RequestCreateSchema().decode(package.content)
-        yield self.service.create_gateway(request.client_id, request.facade_id)
+        gateway = yield self.service.create_gateway(request.client_id, request.facade_id)
         return_value(package.create_response())
 
     @inline_callbacks

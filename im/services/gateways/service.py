@@ -7,14 +7,10 @@ from im.services.gateways.exceptions import GatewayNotFoundError
 
 class Service(IService):
     """
-    :type activities: L{pycloudia.cluster.beans.ActivityRegistry}
     :type reactor: L{pycloudia.reactor.interfaces.IIsolatedReactor}
     :type runner_factory: C{im.services.gateways.interfaces.IRunnerFactory}
     """
-    activities = None
-
     reactor = None
-
     runner_factory = None
 
     def __init__(self):
@@ -26,10 +22,9 @@ class Service(IService):
 
     @call_isolated
     @inline_callbacks
-    def create_gateway(self, client_id, facade_address):
+    def create_gateway(self, client_id, client_address):
         runner = self.runner_factory(client_id)
-        yield self.activities.attach(runner.get_activity())
-        yield runner.set_facade_address(facade_address)
+        yield runner.set_client_address(client_address)
         self.runner_map[client_id] = runner
 
     @call_isolated
@@ -43,7 +38,7 @@ class Service(IService):
     @call_isolated
     @deferrable
     def authenticate_gateway(self, client_id, user_id):
-        return self._get_runner(client_id).set_user_id(user_id)
+        return self._get_runner(client_id).set_client_user_id(user_id)
 
     @deferrable
     def process_incoming_package(self, client_id, package):

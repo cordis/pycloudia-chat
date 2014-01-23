@@ -1,7 +1,7 @@
 from pycloudia.reactor.decorators import call_isolated
 from pycloudia.uitls.defer import inline_callbacks, return_value
 
-from im.services.auth.interfaces import IService
+from im.services.auth.interfaces import IService, IServiceFactory
 
 
 class Service(IService):
@@ -38,7 +38,7 @@ class Service(IService):
         yield self.dao.set_user_friends(user_id, platform, profile_list)
 
 
-class ServiceFactory(object):
+class ServiceFactory(IServiceFactory):
     """
     :type dao: L{im.services.auth.interfaces.IDao}
     :type reactor: L{pycloudia.reactor.interfaces.IIsolatedReactor}

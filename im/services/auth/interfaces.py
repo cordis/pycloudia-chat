@@ -1,6 +1,16 @@
 from abc import ABCMeta, abstractmethod
 
 
+class IServiceFactory(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self):
+        """
+        :rtype: L{im.services.auth.interfaces.IService}
+        """
+
+
 class IService(object):
     __metaclass__ = ABCMeta
 
