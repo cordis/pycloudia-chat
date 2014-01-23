@@ -64,8 +64,8 @@ class ChatConfig(Config):
         instance = Service(self.identity)
         instance.reactor = self.isolated_reactor()
         instance.dao = Dao()
-        instance.adapters = self.auth_platform_adapter_registry()
-        instance.gateways = self.gateways_service_adapter_factory()(instance.get_activity())
+        instance.platforms = self.auth_platform_adapter_registry()
+        instance.sessions = self.gateways_service_adapter_factory()(instance.get_activity())
         instance.users = self.users_service_adapter_factory()(instance.get_activity())
         return instance
 

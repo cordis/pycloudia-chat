@@ -1,18 +1,6 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
-class IAdapterRegistry(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def get(self, platform):
-        """
-        :type platform: C{str}
-        :rtype: L{im.services.auth.platforms.interfaces.IAdapter}
-        :raise: C{KeyError}
-        """
-
-
 class IAdapter(object):
     __metaclass__ = ABCMeta
 

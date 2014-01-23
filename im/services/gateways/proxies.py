@@ -1,8 +1,9 @@
+from pycloudia.services.interfaces import IInvoker
 from pyschema import Schema, Str
 
 from pycloudia.uitls.defer import inline_callbacks, return_value, deferrable
 from pycloudia.uitls.structs import DataBean
-from pycloudia.cluster.interfaces import IServiceInvoker, IServiceAdapter
+from pycloudia.cluster.interfaces import IServiceAdapter
 from pycloudia.cluster.beans import Activity
 
 from im.services.gateways.interfaces import IService
@@ -80,7 +81,7 @@ class ClientProxy(IService, IServiceAdapter):
         return Activity(service=SERVICE.NAME, runtime=client_id)
 
 
-class ServerProxy(IServiceInvoker):
+class ServerProxy(IInvoker):
     def __init__(self, service):
         """
         :type service: L{im.services.gateways.interfaces.IService}

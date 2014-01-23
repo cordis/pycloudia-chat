@@ -1,8 +1,8 @@
 from pycloudia.cluster.beans import Activity
-from pycloudia.cluster.interfaces import IServiceInvoker
 
 from im.services.facades.interfaces import IService
 from im.services.facades.consts import SERVICE, HEADER
+from pycloudia.services.interfaces import IInvoker
 
 
 class ClientProxy(IService):
@@ -22,7 +22,7 @@ class ClientProxy(IService):
         return Activity(service=SERVICE.NAME, address=address)
 
 
-class ServerProxy(IServiceInvoker):
+class ServerProxy(IInvoker):
     def __init__(self, service):
         """
         :type service: L{im.services.facades.interfaces.IService}
