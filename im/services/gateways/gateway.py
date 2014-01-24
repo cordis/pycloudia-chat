@@ -76,11 +76,17 @@ class Gateway(IGateway):
 
 class GatewayFactory(IGatewayFactory):
     """
-    :type dao: L{im.services.gateways.interfaces.IDao}
+    :type router: L{im.services.gateways.interfaces.IRouter}
+    :type sender: L{pycloudia.cluster.interfaces.ISender}
+    :type source_factory: L{pycloudia.services.interfaces.IServiceChannelFactory}
     """
-    dao = None
+    router = None
+    sender = None
+    source_factory = None
 
     def create_gateway(self, channel):
         instance = Gateway(channel)
-        instance.dao = self.dao
+        instance.router = self.router
+        instance.sender = self.sender
+        instance.source_factory = self.source_factory
         return instance

@@ -1,12 +1,12 @@
-from im.services.consts import HEADER
 from pyschema import Schema, Str
 
 from pycloudia.uitls.defer import inline_callbacks, return_value, deferrable
 from pycloudia.uitls.structs import DataBean
 from pycloudia.services.interfaces import IInvoker
 
-from im.services.gateways.interfaces import IService
+from im.services.consts import HEADER
 from im.services.gateways.consts import COMMAND, SOURCE
+from im.services.gateways.interfaces import IService
 
 
 class RequestCreateSchema(Schema):
@@ -92,15 +92,6 @@ class ServiceInvoker(IInvoker):
     @deferrable
     def initialize(self):
         self.service = self.service_factory.create_service()
-        self.service.runner_factory = self.create_runner
-
-    def create_runner(self, client_id):
-        channel = self.channel_factory.create_by_runtime(client_id)
-        instance = self.runner_factory.create_runner(client_id)
-        instance.router = self.router_factory.create_router(channel)
-        instance.clients = self.clients_factory.create_adapter(channel)
-        self.activities.register(channel, client_id)
-        return instance
 
     @deferrable
     def run(self):
@@ -119,7 +110,7 @@ class ServiceInvoker(IInvoker):
     @inline_callbacks
     def _process_create_command(self, package):
         request = RequestCreateSchema().decode(package.content)
-        yield self.service.create_runner(request.client_id, request.facade_id)
+        yield self.service.create_gateway(request.client_id, request.facade_id)
         return_value(package.create_response())
 
     @inline_callbacks

@@ -61,10 +61,13 @@ class Service(IService):
 class ServiceFactory(IServiceFactory):
     """
     :type reactor: L{pycloudia.reactor.interfaces.IIsolatedReactor}
+    :type gateway_factory: C{im.services.gateways.interfaces.IGatewayFactory}
     """
     reactor = None
+    gateway_factory = None
 
     def create_service(self):
         instance = Service()
         instance.reactor = self.reactor
+        instance.gateway_factory = self.gateway_factory
         return instance
