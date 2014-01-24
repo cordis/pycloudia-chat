@@ -8,13 +8,13 @@ from im.services.gateways.exceptions import GatewayNotFoundError
 class Service(IService):
     """
     :type reactor: L{pycloudia.reactor.interfaces.IIsolatedReactor}
-    :type runner_factory: C{im.services.gateways.interfaces.IRunnerFactory}
+    :type gateway_factory: C{im.services.gateways.interfaces.IGatewayFactory}
     """
     reactor = None
-    runner_factory = None
+    gateway_factory = None
 
     def __init__(self):
-        self.runner_map = {}
+        self.gateway_map = {}
 
     @deferrable
     def initialize(self):
@@ -22,39 +22,40 @@ class Service(IService):
 
     @call_isolated
     @inline_callbacks
-    def create_gateway(self, client_id, client_address):
-        runner = self.runner_factory.create_runner(client_id)
-        yield runner.set_client_address(client_address)
-        self.runner_map[client_id] = runner
+    def create_gateway(self, channel):
+        self.gateway_map[channel.runtime] = self.gateway_factory.create_gateway(channel)
 
     @call_isolated
-    @inline_callbacks
-    def delete_gateway(self, client_id, reason=None):
-        runner = self._get_runner(client_id)
-        yield self.activities.detach(self, runner.get_activity())
-        runner = self.runner_map.pop(client_id)
-        yield runner.destroy(reason)
+    @deferrable
+    def authenticate_gateway(self, runtime, user_id):
+        return self._get_gateway(runtime).set_client_user_id(user_id)
 
-    @call_isolated
-    def authenticate_gateway(self, client_id, user_id):
-        return self._get_runner(client_id).set_client_user_id(user_id)
+    def process_incoming_package(self, runtime, package):
+        return self._get_gateway(runtime).process_incoming_package(package)
 
-    def process_incoming_package(self, client_id, package):
-        return self._get_runner(client_id).process_incoming_package(package)
+    def process_outgoing_package(self, runtime, package):
+        return self._get_gateway(runtime).process_outgoing_package(package)
 
-    def process_outgoing_package(self, client_id, package):
-        return self._get_runner(client_id).process_outgoing_package(package)
-
-    def _get_runner(self, client_id):
+    def _get_gateway(self, runtime):
         """
-        :type client_id: C{str}
-        :rtype: L{im.services.gateways.interfaces.IRunner}
+        :type runtime: C{str}
+        :rtype: L{im.services.gateways.interfaces.IGateway}
         :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
         try:
-            return self.runner_map[client_id]
+            return self.gateway_map[runtime]
         except KeyError:
-            raise GatewayNotFoundError(client_id)
+            raise GatewayNotFoundError(runtime)
+
+    @call_isolated
+    @deferrable
+    def delete_gateway(self, runtime, reason=None):
+        try:
+            gateway = self.gateway_map.pop(runtime)
+        except KeyError:
+            pass
+        else:
+            return gateway.destroy(reason)
 
 
 class ServiceFactory(IServiceFactory):

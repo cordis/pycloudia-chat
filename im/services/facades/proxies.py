@@ -1,25 +1,21 @@
-from pycloudia.cluster.beans import Activity
+from pycloudia.services.interfaces import IInvoker
 
 from im.services.facades.interfaces import IService
-from im.services.facades.consts import SERVICE, HEADER
-from pycloudia.services.interfaces import IInvoker
+from im.services.facades.consts import HEADER
 
 
 class ClientProxy(IService):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
+    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelFactory}
     """
     sender = None
+    target_factory = None
 
     def process_outgoing_package(self, address, client_id, package):
-        target = self._create_target_activity(address)
-        package.headers[HEADER.ADDRESS] = address
+        target = self.target_factory.create_by_address(address)
         package.headers[HEADER.CLIENT_ID] = client_id
         self.sender.send_package(target, package)
-
-    @staticmethod
-    def _create_target_activity(address):
-        return Activity(service=SERVICE.NAME, address=address)
 
 
 class ServerProxy(IInvoker):

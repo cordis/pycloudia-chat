@@ -27,7 +27,7 @@ class RequestAuthenticateSchema(Schema):
 class ClientProxy(IService):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
-    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelsFactory}
+    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelFactory}
     """
     sender = None
     target_factory = None
@@ -68,15 +68,17 @@ class ClientProxy(IService):
     def _send_package(self, client_id, source, package):
         target = self.target_factory.create_by_runtime(client_id)
         package.headers[HEADER.INTERNAL.SOURCE] = source
-        package.headers[HEADER.INTERNAL.CLIENT_ID] = client_id
+        package.headers[HEADER.INTERNAL.GATEWAY] = client_id
         self.sender.send_package(target, package)
 
 
 class ServiceInvoker(IInvoker):
     """
-    :type service_factory: C{im.services.gateways.interfaces.IServiceFactory}
-    :type runner_factory: C{im.services.gateways.interfaces.IRunnerFactory}
+    :type channel_factory: L{pycloudia.services.interfaces.IServiceChannelFactory}
+    :type service_factory: L{im.services.gateways.interfaces.IServiceFactory}
+    :type runner_factory: L{im.services.gateways.interfaces.IGatewayFactory}
     """
+    channel_factory = None
     service_factory = None
     runner_factory = None
 
@@ -134,7 +136,7 @@ class ServiceInvoker(IInvoker):
 
     @deferrable
     def _forward_package(self, package):
-        client_id = package.headers.pop(HEADER.INTERNAL.CLIENT_ID)
+        client_id = package.headers.pop(HEADER.INTERNAL.GATEWAY)
         source = package.headers.pop(HEADER.INTERNAL.SOURCE)
         if source == SOURCE.EXTERNAL:
             return self.service.process_incoming_package(client_id, package)

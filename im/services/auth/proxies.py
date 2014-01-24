@@ -14,7 +14,7 @@ from im.services.auth.schemas import AuthenticateRequestSchema, AuthenticateResp
 class ServiceAdapter(IService):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
-    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelsFactory}
+    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelFactory}
     """
     sender = None
     target_factory = None
@@ -43,7 +43,7 @@ class ServiceAdapter(IService):
         request = DataBean(platform=platform, access_token=access_token)
         request = AuthenticateRequestSchema().encode(request)
         return self.sender.package_factory(request, {
-            HEADER.INTERNAL.CLIENT_ID: client_id,
+            HEADER.INTERNAL.GATEWAY: client_id,
             HEADER.INTERNAL.COMMAND: COMMAND.AUTHENTICATE,
         })
 
@@ -87,7 +87,7 @@ class ServiceInvoker(IInvoker):
         """
         :type package: L{pycloudia.packages.interfaces.IRequestPackage}
         """
-        client_id = package.headers[HEADER.INTERNAL.CLIENT_ID]
+        client_id = package.headers[HEADER.INTERNAL.GATEWAY]
         request = AuthenticateRequestSchema().decode(package.content)
         profile = yield self.service.authenticate(client_id, request.platform, request.access_token)
         response = self._create_authenticate_response_package(package, profile)

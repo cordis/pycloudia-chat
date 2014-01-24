@@ -44,14 +44,14 @@ class ChatConfig(Config):
         instance = Service()
         instance.activities = self.activities()
         instance.reactor = self.isolated_reactor()
-        instance.runner_factory = self.gateway_runner_factory()
+        instance.gateway_factory = self.gateway_runner_factory()
         return instance
 
     @Object(scope.SINGLETON)
     def gateway_runner_factory(self):
-        from im.services.gateways.runner import RunnerFactory
+        from im.services.gateways.gateway import GatewayFactory
         from im.services.gateways.dao import Dao
-        instance = RunnerFactory()
+        instance = GatewayFactory()
         instance.dao = Dao()
         instance.sender = self.cluster_runner()
         instance.facades = self.facades_service_adapter()

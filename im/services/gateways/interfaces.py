@@ -15,18 +15,16 @@ class IService(object):
     __metaclass__ = ABCMeta
     
     @abstractmethod
-    def create_gateway(self, client_id, facade_address):
+    def create_gateway(self, channel):
         """
-        :type client_id: C{str}
-        :type facade_address: C{str}
+        :type channel: L{pycloudia.services.beans.Channel}
         :rtype: L{Deferred} of C{None}
         """
 
     @abstractmethod
-    def delete_gateway(self, client_id, reason=None):
+    def delete_gateway(self, runtime, reason=None):
         """
-        :type client_id: C{str}
-        :type reason: C{str}
+        :type runtime: C{str}
         :rtype: L{Deferred} of C{None}
         :raise: L{im.services.gateways.exceptions.GatewayNotFoundError}
         """
@@ -59,15 +57,8 @@ class IService(object):
         """
 
 
-class IRunner(object):
+class IGateway(object):
     __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def set_client_address(self, facade_address):
-        """
-        :type facade_address: C{str}
-        :rtype: L{Deferred} of C{None}
-        """
 
     @abstractmethod
     def set_client_user_id(self, user_id):
@@ -92,14 +83,14 @@ class IRunner(object):
         """
 
 
-class IRunnerFactory(object):
+class IGatewayFactory(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def create_runner(self, client_id):
+    def create_gateway(self, channel):
         """
-        :type client_id: C{str}
-        :rtype: L{im.services.gateways.interfaces.IRunner}
+        :type channel: L{pycloudia.services.beans.Channel}
+        :rtype: L{im.services.gateways.interfaces.IGateway}
         """
 
 
@@ -107,11 +98,12 @@ class IRouter(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def route_package(self, package):
+    def get_target_channel(self, package):
         """
         :type package: L{pycloudia.packages.interfaces.IPackage}
-        :rtype: L{Deferred} of L{pycloudia.packages.interfaces.IPackage or None}
+        :rtype: L{pycloudia.services.beans.Channel}
         :raise: L{im.services.gateways.exceptions.HeaderNotFoundError}
+        :raise: L{im.services.gateways.exceptions.ServiceNotFoundError}
         """
 
 

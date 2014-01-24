@@ -8,6 +8,12 @@ class HeaderNotFoundError(BaseGatewayError):
         super(HeaderNotFoundError, self).__init__(*args, **kwargs)
 
 
+class ServiceNotFoundError(BaseGatewayError):
+    def __init__(self, service_name, *args, **kwargs):
+        self.service_name = service_name
+        super(ServiceNotFoundError, self).__init__(*args, **kwargs)
+
+
 class GatewayNotFoundError(BaseGatewayError):
     def __init__(self, client_id, *args, **kwargs):
         self.client_id = client_id
