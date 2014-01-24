@@ -5,7 +5,7 @@ class IServiceFactory(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __call__(self):
+    def create_service(self):
         """
         :rtype: L{im.services.auth.interfaces.IService}
         """

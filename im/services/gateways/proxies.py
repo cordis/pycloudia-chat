@@ -1,13 +1,12 @@
-from pycloudia.services.interfaces import IInvoker
+from im.services.consts import HEADER
 from pyschema import Schema, Str
 
 from pycloudia.uitls.defer import inline_callbacks, return_value, deferrable
 from pycloudia.uitls.structs import DataBean
-from pycloudia.cluster.interfaces import IServiceAdapter
-from pycloudia.cluster.beans import Activity
+from pycloudia.services.interfaces import IInvoker
 
 from im.services.gateways.interfaces import IService
-from im.services.gateways.consts import HEADER, COMMAND, SERVICE, SOURCE
+from im.services.gateways.consts import COMMAND, SOURCE
 
 
 class RequestCreateSchema(Schema):
@@ -25,23 +24,19 @@ class RequestAuthenticateSchema(Schema):
     user_id = Str()
 
 
-class ClientProxy(IService, IServiceAdapter):
+class ClientProxy(IService):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
+    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelsFactory}
     """
     sender = None
+    target_factory = None
 
     def __init__(self, source):
         """
-        :type source: L{pycloudia.cluster.beans.Activity}
+        :type source: L{pycloudia.service.beans.Channel}
         """
         self.source = source
-
-    def suspend_activity(self, activity):
-        raise NotImplementedError()
-
-    def recover_activity(self, activity):
-        raise NotImplementedError()
 
     def create_gateway(self, client_id, facade_address):
         request = RequestCreateSchema().encode(DataBean(client_id=client_id, facade_id=facade_address))
@@ -57,7 +52,7 @@ class ClientProxy(IService, IServiceAdapter):
 
     @deferrable
     def _send_request_package(self, client_id, command, request):
-        target = self._create_target_activity(client_id)
+        target = self.target_factory.create_by_runtime(client_id)
         package = self.sender.package_factory(request, {
             HEADER.INTERNAL.COMMAND: command,
         })
@@ -71,21 +66,19 @@ class ClientProxy(IService, IServiceAdapter):
 
     @deferrable
     def _send_package(self, client_id, source, package):
-        target = self._create_target_activity(client_id)
+        target = self.target_factory.create_by_runtime(client_id)
         package.headers[HEADER.INTERNAL.SOURCE] = source
         package.headers[HEADER.INTERNAL.CLIENT_ID] = client_id
         self.sender.send_package(target, package)
 
-    @staticmethod
-    def _create_target_activity(client_id):
-        return Activity(service=SERVICE.NAME, runtime=client_id)
-
 
 class ServiceInvoker(IInvoker):
     """
-    :type service_factory: C{Callable}
+    :type service_factory: C{im.services.gateways.interfaces.IServiceFactory}
+    :type runner_factory: C{im.services.gateways.interfaces.IRunnerFactory}
     """
     service_factory = None
+    runner_factory = None
 
     def __init__(self, channel):
         """
@@ -96,8 +89,16 @@ class ServiceInvoker(IInvoker):
 
     @deferrable
     def initialize(self):
-        self.service = self.service_factory()
-        self.service.runner_factory = self.create_runner_factory(self.channel)
+        self.service = self.service_factory.create_service()
+        self.service.runner_factory = self.create_runner
+
+    def create_runner(self, client_id):
+        channel = self.channel_factory.create_by_runtime(client_id)
+        instance = self.runner_factory.create_runner(client_id)
+        instance.router = self.router_factory.create_router(channel)
+        instance.clients = self.clients_factory.create_adapter(channel)
+        self.activities.register(channel, client_id)
+        return instance
 
     @deferrable
     def run(self):
@@ -116,7 +117,7 @@ class ServiceInvoker(IInvoker):
     @inline_callbacks
     def _process_create_command(self, package):
         request = RequestCreateSchema().decode(package.content)
-        gateway = yield self.service.create_gateway(request.client_id, request.facade_id)
+        yield self.service.create_runner(request.client_id, request.facade_id)
         return_value(package.create_response())
 
     @inline_callbacks

@@ -1,7 +1,7 @@
 from pycloudia.uitls.defer import inline_callbacks, deferrable
 from pycloudia.reactor.decorators import call_isolated
 
-from im.services.gateways.interfaces import IService
+from im.services.gateways.interfaces import IService, IServiceFactory
 from im.services.gateways.exceptions import GatewayNotFoundError
 
 
@@ -23,7 +23,7 @@ class Service(IService):
     @call_isolated
     @inline_callbacks
     def create_gateway(self, client_id, client_address):
-        runner = self.runner_factory(client_id)
+        runner = self.runner_factory.create_runner(client_id)
         yield runner.set_client_address(client_address)
         self.runner_map[client_id] = runner
 
@@ -36,15 +36,12 @@ class Service(IService):
         yield runner.destroy(reason)
 
     @call_isolated
-    @deferrable
     def authenticate_gateway(self, client_id, user_id):
         return self._get_runner(client_id).set_client_user_id(user_id)
 
-    @deferrable
     def process_incoming_package(self, client_id, package):
         return self._get_runner(client_id).process_incoming_package(package)
 
-    @deferrable
     def process_outgoing_package(self, client_id, package):
         return self._get_runner(client_id).process_outgoing_package(package)
 
@@ -58,3 +55,15 @@ class Service(IService):
             return self.runner_map[client_id]
         except KeyError:
             raise GatewayNotFoundError(client_id)
+
+
+class ServiceFactory(IServiceFactory):
+    """
+    :type reactor: L{pycloudia.reactor.interfaces.IIsolatedReactor}
+    """
+    reactor = None
+
+    def create_service(self):
+        instance = Service()
+        instance.reactor = self.reactor
+        return instance

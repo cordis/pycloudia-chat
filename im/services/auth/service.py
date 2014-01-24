@@ -48,7 +48,7 @@ class ServiceFactory(IServiceFactory):
     reactor = None
     platforms = None
 
-    def __call__(self):
+    def create_service(self):
         instance = Service()
         instance.dao = self.dao
         instance.reactor = self.reactor

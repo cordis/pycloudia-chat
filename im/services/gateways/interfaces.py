@@ -1,6 +1,16 @@
 from abc import ABCMeta, abstractmethod
 
 
+class IServiceFactory(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def create_service(self):
+        """
+        :rtype: L{im.services.gateways.interfaces.IService}
+        """
+
+
 class IService(object):
     __metaclass__ = ABCMeta
     
@@ -86,7 +96,7 @@ class IRunnerFactory(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __call__(self, client_id):
+    def create_runner(self, client_id):
         """
         :type client_id: C{str}
         :rtype: L{im.services.gateways.interfaces.IRunner}
@@ -124,4 +134,17 @@ class IDao(object):
         :type user_id: C{str}
         :return: deferred with user_id
         :rtype: L{Deferred} of C{str}
+        """
+
+
+class IClients(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def process_outgoing_package(self, client_address, client_id, package):
+        """
+        :type client_address: C{str}
+        :type client_id: C{str}
+        :type package: L{pycloudia.packages.interfaces.IPackage}
+        :rtype: L{Deferred} of C{None}
         """

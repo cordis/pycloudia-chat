@@ -1,6 +1,7 @@
 from pycloudia.uitls.defer import deferrable, inline_callbacks, return_value
 
-from im.services.gateways.consts import HEADER, DEFAULT
+from im.services.consts import HEADER
+from im.services.gateways.consts import DEFAULT
 from im.services.gateways.interfaces import IRouter
 from im.services.gateways.exceptions import HeaderNotFoundError
 
@@ -8,16 +9,16 @@ from im.services.gateways.exceptions import HeaderNotFoundError
 class Router(IRouter):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
-    :type target_factory_map: C{dict} of L{pycloudia.services.interfaces.IChannelsFactory}
+    :type target_factory: L{pycloudia.services.interfaces.IChannelsFactory}
     """
     sender = None
-    target_factory_map = None
+    target_factory = None
 
-    def __init__(self, channel):
+    def __init__(self, source):
         """
-        :type channel: L{pycloudia.services.beans.Channel}
+        :type source: L{pycloudia.services.beans.Channel}
         """
-        self.channel = channel
+        self.source = source
 
     @deferrable
     def route_package(self, package):
@@ -33,12 +34,11 @@ class Router(IRouter):
         """
         try:
             service = package.headers.pop(HEADER.EXTERNAL.SERVICE)
-            target_factory = self.target_factory_map[service]
         except KeyError:
             raise HeaderNotFoundError(HEADER.EXTERNAL.SERVICE)
         else:
-            runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, hash(self.channel.runtime))
-            return target_factory.create_by_runtime(runtime)
+            runtime = package.headers.pop(HEADER.EXTERNAL.RUNTIME, HEADER.INTERNAL.CLIENT_ID)
+            return self.target_factory.create_by_runtime(service, runtime)
 
     @staticmethod
     def _copy_external_command(package):
@@ -76,7 +76,7 @@ class Router(IRouter):
         :rtype: L{Deferred} of L{pycloudia.packages.interfaces.IPackage}
         """
         timeout = self._get_external_timeout(request_package)
-        response_package = yield self.sender.send_request_package(self.channel, target, request_package, timeout)
+        response_package = yield self.sender.send_request_package(self.source, target, request_package, timeout)
         response_package.headers[HEADER.EXTERNAL.RESPONSE_ID] = request_id
         return_value(response_package)
 

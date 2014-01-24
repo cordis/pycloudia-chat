@@ -4,17 +4,17 @@ from pycloudia.cluster.exceptions import PackageIgnoredWarning
 from pycloudia.cluster.resolver import resolve_errors
 from pycloudia.services.interfaces import IInvoker
 
-from im.services.gateways.consts import HEADER as SESSIONS_HEADER
+from im.services.consts import HEADER
 from im.services.auth.interfaces import IService
 from im.services.auth.exceptions import Resolver
-from im.services.auth.consts import HEADER, COMMAND
+from im.services.auth.consts import COMMAND
 from im.services.auth.schemas import AuthenticateRequestSchema, AuthenticateResponseSchema
 
 
 class ServiceAdapter(IService):
     """
     :type sender: L{pycloudia.cluster.interfaces.ISender}
-    :type target_factory: L{pycloudia.services.interfaces.IChannelsFactory}
+    :type target_factory: L{pycloudia.services.interfaces.IServiceChannelsFactory}
     """
     sender = None
     target_factory = None
@@ -43,8 +43,8 @@ class ServiceAdapter(IService):
         request = DataBean(platform=platform, access_token=access_token)
         request = AuthenticateRequestSchema().encode(request)
         return self.sender.package_factory(request, {
-            HEADER.COMMAND: COMMAND.AUTHENTICATE,
-            SESSIONS_HEADER.INTERNAL.CLIENT_ID: client_id,
+            HEADER.INTERNAL.CLIENT_ID: client_id,
+            HEADER.INTERNAL.COMMAND: COMMAND.AUTHENTICATE,
         })
 
 
@@ -67,7 +67,7 @@ class ServiceInvoker(IInvoker):
 
     @deferrable
     def initialize(self):
-        self.service = self.service_factory()
+        self.service = self.service_factory.create_service()
         self.service.users = self.users_factory.create_adapter(self.channel)
         self.service.sessions = self.sessions_factory.create_adapter(self.channel)
 
@@ -77,14 +77,17 @@ class ServiceInvoker(IInvoker):
 
     @deferrable
     def process_package(self, package):
-        if COMMAND.AUTHENTICATE == package.headers.pop(HEADER.COMMAND, None):
+        if COMMAND.AUTHENTICATE == package.headers.pop(HEADER.INTERNAL.COMMAND, None):
             return self._process_authenticate_request_package(package)
         raise PackageIgnoredWarning(package)
 
     @resolve_errors(Resolver)
     @inline_callbacks
     def _process_authenticate_request_package(self, package):
-        client_id = package.headers[SESSIONS_HEADER.INTERNAL.CLIENT_ID]
+        """
+        :type package: L{pycloudia.packages.interfaces.IRequestPackage}
+        """
+        client_id = package.headers[HEADER.INTERNAL.CLIENT_ID]
         request = AuthenticateRequestSchema().decode(package.content)
         profile = yield self.service.authenticate(client_id, request.platform, request.access_token)
         response = self._create_authenticate_response_package(package, profile)
@@ -98,6 +101,4 @@ class ServiceInvoker(IInvoker):
         :rtype: L{pycloudia.packages.interfaces.IPackage}
         """
         response = AuthenticateResponseSchema().encode(profile)
-        return request_package.create_response(response, {
-            HEADER.USER_ID: profile.user_id,
-        })
+        return request_package.create_response(response)

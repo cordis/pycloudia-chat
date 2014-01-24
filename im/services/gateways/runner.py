@@ -1,7 +1,7 @@
+from im.services.consts import HEADER
 from pycloudia.uitls.defer import inline_callbacks, deferrable
 
 from im.services.facades.exceptions import ClientNotFoundError
-from im.services.gateways.consts import HEADER
 from im.services.gateways.interfaces import IRunner, IRunnerFactory
 
 
@@ -9,14 +9,14 @@ class Runner(IRunner):
     """
     :type dao: L{im.services.gateways.interfaces.IDao}
     :type router: L{im.services.gateways.interfaces.IRouter}
-    :type clients: L{im.services.facades.interfaces.IService}
+    :type clients: L{im.services.gateways.interfaces.IClients}
     """
     dao = None
     router = None
     clients = None
 
-    def __init__(self, client_id):
-        self.client_id = client_id
+    def __init__(self, client):
+        self.client_id = client
         self.client_address = None
         self.client_user_id = None
 
@@ -57,16 +57,10 @@ class Runner(IRunner):
 class RunnerFactory(IRunnerFactory):
     """
     :type dao: L{im.services.gateways.interfaces.IDao}
-    :type router: L{pycloudia.cluster.interfaces.ISender}
-    :type facades: L{im.services.facades.interfaces.IService}
     """
     dao = None
-    router = None
-    facades = None
 
-    def __call__(self, client_id):
+    def create_runner(self, client_id):
         instance = Runner(client_id)
         instance.dao = self.dao
-        instance.router = self.router
-        instance.clients = self.facades
         return instance
