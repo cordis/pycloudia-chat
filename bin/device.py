@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 from springpython.context import ApplicationContext
 
-from im.ioc_config import ChatConfig
+from pyligaforex.ioc_config import ChatConfig
 
 
 def main():
