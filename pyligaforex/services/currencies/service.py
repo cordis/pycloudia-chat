@@ -1,5 +1,9 @@
 class Service(object):
-    pass
+    def get_currency_list(self):
+        raise NotImplementedError()
+
+    def get_currency(self):
+        raise NotImplementedError()
 
 
 class ServiceFactory(object):
