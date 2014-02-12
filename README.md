@@ -1,4 +1,4 @@
-pycloudia-chat
+pyligaforex
 ==============
 
-PyCloudia chat example
+LigaForex experiments

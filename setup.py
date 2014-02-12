@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='PyCloudia Chat example',
+    name='LigaForex',
     version='0.1',
     packages=find_packages(),
     install_requires=[
@@ -13,7 +13,7 @@ setup(
     ],
     author='CordiS',
     author_email='cordis@game-mafia.ru',
-    description='PyCloudia Chat example demonstrates how to built distributed software',
-    keywords='pycloudia chat example',
-    url='https://github.com/cordis/pycloudia-chat',
+    description='LigaForex is a lightweight caching proxy server maintained between client and SDB',
+    keywords='ligaforex pyligaforex',
+    url='https://github.com/LigaForexCo/pyligaforex',
 )
